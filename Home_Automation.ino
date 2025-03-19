@@ -1,26 +1,51 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
-#include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 #include <EEPROM.h>
+#include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
+
+//IR Receiver>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Code
+//IR Receiver>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Code
 #include <IRremoteESP8266.h>
 #include <IRrecv.h>
 #include <IRutils.h>
+
+//ir Receiver signal pin>>>>>>>>>>>>>>>>
+const uint16_t kRecvPin = D5;
+
+//ir Pin for LED 
+const int led_1 = D4;  // Pin for LED 1
+const int led_2 = D0;  // Pin for LED 2
+const int led_3 = D1;  // Pin for LED 3
+const int led_4 = D2;  // Pin for LED 4
+const int led_5 = D3;  // Pin for LED 5
+const int led_6 = D6;  // Pin for LED 6
+
+
+
+
+
+IRrecv irrecv(kRecvPin);
+decode_results results;
+//IR Receiver>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Code
+//IR Receiver>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Code
+
+
+
+
+
+
+
+
 
 
 
 
 const int ledPin1 = D4;  // Pin for LED 1
 const int ledPin2 = D0;  // Pin for LED 2
-const int ledPin3 = D7;  // Pin for LED 3
-const int ledPin4 = D8;  // Pin for LED 4
-
-
-
-const uint16_t kRecvPin = D5;
-IRrecv irrecv(kRecvPin);
-decode_results results;
-
-
+const int ledPin3 = D1;  // Pin for LED 3
+const int ledPin4 = D2;  // Pin for LED 4
+const int ledPin5 = D3;  // Pin for LED 5
+const int ledPin6 = D6;  // Pin for LED 6
 
 ESP8266WebServer server(80);  // Web server on port 80
 
@@ -45,43 +70,29 @@ bool readState(int ledIndex) {
 
 
 
+
+
+
+
+
+
 void setup() {
   Serial.begin(115200);
-   Serial.println("IR Receiver Initialized!");
 
   // Initialize EEPROM with size 6 (one for each LED)
-  EEPROM.begin(4);
-
-  // Initialize LED pins
-  pinMode(ledPin1, OUTPUT);
-  pinMode(ledPin2, OUTPUT);
-  pinMode(ledPin3, OUTPUT);
-  pinMode(ledPin4, OUTPUT);
-
-
-    irrecv.enableIRIn();    // Start the IR receiver
-
-  // Restore LED states from EEPROM
-  digitalWrite(ledPin1, readState(0) ? LOW : HIGH);
-  digitalWrite(ledPin2, readState(1) ? LOW : HIGH);
-  digitalWrite(ledPin3, readState(2) ? LOW : HIGH);
-  digitalWrite(ledPin4, readState(3) ? LOW : HIGH);
- 
+  EEPROM.begin(6);
 
 
 
 
-
-
-
-
-
-
-
- //WiFiManager, Local intialization. Once its business is done, there is no need to keep it around
- //WiFiManager, Local intialization. Once its business is done, there is no need to keep it around
-    WiFiManager wm;
+// put your setup code here, to run once:
+   
     
+    //WiFiManager, Local intialization. Once its business is done, there is no need to keep it around
+    WiFiManager wm;
+
+
+ 
     bool res;
     // res = wm.autoConnect(); // auto generated AP name from chipid
      res = wm.autoConnect("Smart IOT"); // anonymous ap
@@ -89,28 +100,76 @@ void setup() {
 
     if(!res) {
         Serial.println("Failed to connect");
-        ESP.restart();
+         ESP.restart();
     } 
     else {
         //if you get here you have connected to the WiFi    
         Serial.println("connected...yeey :)");
-    }//WiFiManager, Local intialization. Once its business is done, there is no need to keep it around
-    //WiFiManager, Local intialization. Once its business is done, there is no need to keep it around
+    }
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+//IR Receiver>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Code
+//IR Receiver>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Code
+Serial.begin(115200);
+  Serial.println("IR Receiver Initialized!");
+
+  pinMode(led_1,OUTPUT); // Set LED pin as OUTPUT
+  pinMode(led_2,OUTPUT); // Set LED pin as OUTPUT
+  pinMode(led_3,OUTPUT); // Set LED pin as OUTPUT
+  pinMode(led_4,OUTPUT); // Set LED pin as OUTPUT
+  pinMode(led_5,OUTPUT); // Set LED pin as OUTPUT
+  pinMode(led_6,OUTPUT); // Set LED pin as OUTPUT
+
+  
+  irrecv.enableIRIn();    // Start the IR receiver
+//IR Receiver>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Code
+//IR Receiver>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Code
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  // Initialize LED pins
+  pinMode(ledPin1, OUTPUT);
+  pinMode(ledPin2, OUTPUT);
+  pinMode(ledPin3, OUTPUT);
+  pinMode(ledPin4, OUTPUT);
+  pinMode(ledPin5, OUTPUT);
+  pinMode(ledPin6, OUTPUT);
+
+  // Restore LED states from EEPROM
+  digitalWrite(ledPin1, readState(0) ? LOW : HIGH);
+  digitalWrite(ledPin2, readState(1) ? LOW : HIGH);
+  digitalWrite(ledPin3, readState(2) ? LOW : HIGH);
+  digitalWrite(ledPin4, readState(3) ? LOW : HIGH);
+  digitalWrite(ledPin5, readState(4) ? LOW : HIGH);
+  digitalWrite(ledPin6, readState(5) ? LOW : HIGH);
+
   
 
   // Print the IP address
   Serial.print("NodeMCU IP address: ");
   Serial.println(WiFi.localIP());
-
-
-
-
-
-
-
-
-
-
 
   // Define routes for the web server
   addLEDControlRoutes();
@@ -126,8 +185,15 @@ void setup() {
 
 
 
+
+
+
+
+
+
 void loop() {
   server.handleClient();  // Handle client requests
+
 
 
 //IR Receiver>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Code
@@ -138,16 +204,22 @@ void loop() {
 
  // Correct comparison
     if(results.value == 0xE218EF807F) { // Use HEX format, not a string
-      digitalWrite(ledPin1, !digitalRead(ledPin1));  // Toggle LED state
+      digitalWrite(led_1, !digitalRead(led_1));  // Toggle LED state
       Serial.println("LED TOGGLED!");
     }else if(results.value == 0xE218EF40BF){
-      digitalWrite(ledPin2, !digitalRead(ledPin2));  // Toggle LED state
+      digitalWrite(led_2, !digitalRead(led_2));  // Toggle LED state
       Serial.println("LED TOGGLED!");
      } else if(results.value == 0xE218EFC03F){
-      digitalWrite(ledPin3, !digitalRead(ledPin3));  // Toggle LED state
+      digitalWrite(led_3, !digitalRead(led_3));  // Toggle LED state
       Serial.println("LED TOGGLED!");
      } else if(results.value == 0xE218EF20DF){
-      digitalWrite(ledPin4, !digitalRead(ledPin4));  // Toggle LED state
+      digitalWrite(led_4, !digitalRead(led_4));  // Toggle LED state
+      Serial.println("LED TOGGLED!");
+     } else if(results.value == 0xE218EFA05F){
+      digitalWrite(led_5, !digitalRead(led_5));  // Toggle LED state
+      Serial.println("LED TOGGLED!");
+     } else if(results.value == 0xE218EF10EF){
+      digitalWrite(led_6, !digitalRead(led_6));  // Toggle LED state
       Serial.println("LED TOGGLED!");
      } 
 
@@ -166,15 +238,14 @@ void loop() {
 //IR Receiver>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Code
 //IR Receiver>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Code
 
+
+
+
+
+
+
   
-}//..............void loop
-
-
-
-
-
-
-
+}
 
 // Function to add LED control routes
 void addLEDControlRoutes() {
@@ -226,5 +297,27 @@ void addLEDControlRoutes() {
     server.send(200, "text/plain", "LED 4 is now OFF");
   });
 
+  server.on("/led5on", HTTP_GET, []() {
+    digitalWrite(ledPin5, LOW);
+    saveState(4, true);  // Save state to EEPROM
+    server.send(200, "text/plain", "LED 5 is now ON");
+  });
 
+  server.on("/led5off", HTTP_GET, []() {
+    digitalWrite(ledPin5, HIGH);
+    saveState(4, false);  // Save state to EEPROM
+    server.send(200, "text/plain", "LED 5 is now OFF");
+  });
+
+  server.on("/led6on", HTTP_GET, []() {
+    digitalWrite(ledPin6, LOW);
+    saveState(5, true);  // Save state to EEPROM
+    server.send(200, "text/plain", "LED 6 is now ON");
+  });
+
+  server.on("/led6off", HTTP_GET, []() {
+    digitalWrite(ledPin6, HIGH);
+    saveState(5, false);  // Save state to EEPROM
+    server.send(200, "text/plain", "LED 6 is now OFF");
+  });
 }
